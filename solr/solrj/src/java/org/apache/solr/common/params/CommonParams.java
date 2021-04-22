@@ -71,6 +71,9 @@ public interface CommonParams {
   // SOLR-15252 start
   String ROWS_WARN_THRESHOLD ="rows.warnThreshold";
   int ROWS_WARN_THRESHOLD_DEFAULT = 100000;
+
+  String ROWS_WARN_THRESHOLD_LOG_INTERVAL_SECONDS ="rows.warnThresholdLogIntervalSeconds";
+  int ROWS_WARN_THRESHOLD_LOG_INTERVAL_SECONDS_DEFAULT = 60;
   // SOLR-15252 start
 
   // SOLR-4228 start

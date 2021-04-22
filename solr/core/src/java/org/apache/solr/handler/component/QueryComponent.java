@@ -239,11 +239,13 @@ public class QueryComponent extends SearchComponent
     if (rb.getSortSpec().getOffset() < 0) {
       throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "'start' parameter cannot be negative");
     }
-    if(rb.getSortSpec().getCount() > params.getInt(CommonParams.ROWS_WARN_THRESHOLD, CommonParams.ROWS_WARN_THRESHOLD_DEFAULT) &&
-      shouldLogPeriodically(CommonParams.ROWS_WARN_THRESHOLD, 60)) {
-      log.warn("Very high 'rows' parameter detected. This may lead to performance- and memory problems. " +
-          "Consider pagination, see https://solr.apache.org/guide/pagination-of-results.html. " +
-          "This warning will mute for 60s.");
+    if(rb.getSortSpec().getCount() > params.getInt(CommonParams.ROWS_WARN_THRESHOLD, CommonParams.ROWS_WARN_THRESHOLD_DEFAULT)) {
+      final int logIntervalSeconds = params.getInt(CommonParams.ROWS_WARN_THRESHOLD_LOG_INTERVAL_SECONDS, CommonParams.ROWS_WARN_THRESHOLD_LOG_INTERVAL_SECONDS_DEFAULT);
+      if (shouldLogPeriodically(CommonParams.ROWS_WARN_THRESHOLD, logIntervalSeconds)) {
+        log.warn("Very high 'rows' parameter detected. This may lead to performance- and memory problems. " +
+            "Consider pagination, see https://solr.apache.org/guide/pagination-of-results.html. " +
+            "This warning will mute for {}s.", logIntervalSeconds);
+      }
     }
   }
 
