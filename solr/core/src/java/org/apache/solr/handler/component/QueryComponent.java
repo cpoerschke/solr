@@ -130,7 +130,6 @@ public class QueryComponent extends SearchComponent
 {
   public static final String COMPONENT_NAME = "query";
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-  private static final int ROWS_WARN_THRESHOLD = 100000;
   private static Map<String,Instant> lastLoggedMap = new ConcurrentHashMap<>();
 
   @Override
@@ -240,7 +239,8 @@ public class QueryComponent extends SearchComponent
     if (rb.getSortSpec().getOffset() < 0) {
       throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "'start' parameter cannot be negative");
     }
-    if(rb.getSortSpec().getCount() > ROWS_WARN_THRESHOLD && shouldLogPeriodically("rowsWarn", 60)) {
+    if(rb.getSortSpec().getCount() > params.getInt(CommonParams.ROWS_WARN_THRESHOLD, CommonParams.ROWS_WARN_THRESHOLD_DEFAULT) &&
+      shouldLogPeriodically(CommonParams.ROWS_WARN_THRESHOLD, 60)) {
       log.warn("Very high 'rows' parameter detected. This may lead to performance- and memory problems. " +
           "Consider pagination, see https://solr.apache.org/guide/pagination-of-results.html. " +
           "This warning will mute for 60s.");

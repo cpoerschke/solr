@@ -68,6 +68,11 @@ public interface CommonParams {
   String ROWS ="rows";
   int ROWS_DEFAULT = 10;
 
+  // SOLR-15252 start
+  String ROWS_WARN_THRESHOLD ="rows.warnThreshold";
+  int ROWS_WARN_THRESHOLD_DEFAULT = 100000;
+  // SOLR-15252 start
+
   // SOLR-4228 start
   /** handler value for SolrPing */
   String PING_HANDLER = "/admin/ping";
