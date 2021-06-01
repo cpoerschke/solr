@@ -30,6 +30,7 @@ import org.apache.solr.search.SortSpec;
  * collected in the queue.
  */
 public class SortedHitQueueManager {
+  private final int queueCapacity;
   private final ShardFieldSortedHitQueue queue;
   private final ShardFieldSortedHitQueue reRankQueue;
   private final int reRankDocsSize;
@@ -37,30 +38,22 @@ public class SortedHitQueueManager {
   public SortedHitQueueManager(SortField[] sortFields, SortSpec ss, ResponseBuilder rb) {
     final RankQuery rankQuery = rb.getRankQuery();
 
+    queueCapacity = ss.getOffset() + ss.getCount();
+
     if(rb.getRankQuery() != null && rankQuery instanceof AbstractReRankQuery){
-      // reRanking is enabled, create a queue that is only used for reRanked results
-      // disable shortcut in the queue to correctly sort documents that were reRanked on the shards back into the full result
       reRankDocsSize = ((AbstractReRankQuery) rankQuery).getReRankDocs();
-      int absoluteReRankDocs = Math.min(reRankDocsSize, ss.getCount());
       reRankQueue = new ShardFieldSortedHitQueue(new SortField[]{SortField.FIELD_SCORE}, 
-              absoluteReRankDocs, rb.req.getSearcher());
-      queue = new ShardFieldSortedHitQueue(sortFields, ss.getOffset() + ss.getCount() - absoluteReRankDocs, 
-              rb.req.getSearcher(), false);
+              queueCapacity, rb.req.getSearcher());
     } else {
-      // reRanking is disabled, use one queue for all results
-      queue = new ShardFieldSortedHitQueue(sortFields, ss.getOffset() + ss.getCount(), rb.req.getSearcher());
       reRankQueue = null;
       reRankDocsSize = 0;
     }
+    queue = new ShardFieldSortedHitQueue(sortFields, queueCapacity, rb.req.getSearcher());
   }
 
-  public void addDocument(ShardDoc shardDoc, int i) {
-    if(reRankQueue != null && i < reRankDocsSize) {
-      ShardDoc droppedShardDoc = reRankQueue.insertWithOverflow(shardDoc);
-      // FIXME: Only works if the original request does not sort by score
-      if(droppedShardDoc != null) {
-        queue.insertWithOverflow(droppedShardDoc);
-      }
+  public void addDocument(ShardDoc shardDoc, int orderInShard) {
+    if(reRankQueue != null && orderInShard < reRankDocsSize) {
+      reRankQueue.insertWithOverflow(shardDoc);
     } else {
       queue.insertWithOverflow(shardDoc);
     }
@@ -76,8 +69,16 @@ public class SortedHitQueueManager {
 
   public int getResultSize(int offset) {
     if(reRankQueue != null) {
-      return queue.size() - offset + reRankQueue.size();
+      return reRankQueue.size() + queue.size() - offset;
     }
     return queue.size() - offset;
+  }
+
+  public void trimIfNeeded() {
+    if(reRankQueue != null) {
+      while (queueCapacity < reRankQueue.size() + queue.size()) {
+        queue.pop();
+      }
+    }
   }
 }

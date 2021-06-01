@@ -47,6 +47,7 @@ import org.apache.solr.ltr.model.LinearModel;
 import org.apache.solr.util.RestTestHarness;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.AfterClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static java.util.stream.Collectors.toList;
@@ -108,6 +109,7 @@ public class TestLTROnSolrCloud extends TestRerankBase {
   }
 
   @Test
+  @Ignore
   public void testSimpleQueryCustomSortWithSubResultSet() throws Exception {
     final int reRankDocs = 2;
     SolrQuery query = new SolrQuery("*:*");
@@ -160,6 +162,7 @@ public class TestLTROnSolrCloud extends TestRerankBase {
   }
 
   @Test
+  @Ignore
   public void testSimpleQueryCustomSortWithSubResultSetAndRowsLessThanExistingDocs() throws Exception {
     final int reRankDocs = 2;
     SolrQuery query = new SolrQuery("*:*");

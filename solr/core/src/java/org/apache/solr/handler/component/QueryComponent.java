@@ -1005,6 +1005,7 @@ public class QueryComponent extends SearchComponent
           queueManager.addDocument(shardDoc, i);
         } // end for-each-doc-in-response
       } // end for-each-response
+      queueManager.trimIfNeeded();
       
       // The queue now has 0 -> queuesize docs, where queuesize <= start + rows
       // So we want to pop the last documents off the queue to get
