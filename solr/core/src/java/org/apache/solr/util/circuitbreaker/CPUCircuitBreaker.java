@@ -43,14 +43,22 @@ public class CPUCircuitBreaker extends CircuitBreaker {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   private static final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
-  private final boolean enabled;
-  private final double cpuUsageThreshold;
+  private double cpuUsageThreshold;
 
   // Assumption -- the value of these parameters will be set correctly before invoking getDebugInfo()
   private static final ThreadLocal<Double> seenCPUUsage = ThreadLocal.withInitial(() -> 0.0);
 
   private static final ThreadLocal<Double> allowedCPUUsage = ThreadLocal.withInitial(() -> 0.0);
 
+  public CPUCircuitBreaker() {
+    super();
+  }
+
+  public void setUsageThreshold(double usageThreshold) {
+    this.cpuUsageThreshold = usageThreshold;
+  }
+
+  @Deprecated
   public CPUCircuitBreaker(CircuitBreakerConfig config) {
     super(config);
 

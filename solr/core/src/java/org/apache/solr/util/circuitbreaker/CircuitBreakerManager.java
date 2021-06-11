@@ -18,11 +18,14 @@
 package org.apache.solr.util.circuitbreaker;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.PluginInfo;
+import org.apache.solr.core.SolrResourceLoader;
+import org.apache.solr.util.SolrPluginUtils;
 import org.apache.solr.util.plugin.PluginInfoInitialized;
 
 /**
@@ -135,11 +138,58 @@ public class CircuitBreakerManager implements PluginInfoInitialized {
    *
    * Any default circuit breakers should be registered here.
    */
+  @Deprecated
   public static CircuitBreakerManager build(PluginInfo pluginInfo) {
+    return build(pluginInfo, null);
+  }
+
+  /**
+   * TODO
+   */
+  public static CircuitBreakerManager build(PluginInfo pluginInfo, SolrResourceLoader solrResourceLoader) {
     boolean enabled = pluginInfo == null ? false : Boolean.parseBoolean(pluginInfo.attributes.getOrDefault("enabled", "false"));
     CircuitBreakerManager circuitBreakerManager = new CircuitBreakerManager(enabled);
 
     circuitBreakerManager.init(pluginInfo);
+
+    final HashMap<String, CircuitBreaker> namedCBs = new HashMap<>();
+
+    if (solrResourceLoader != null) {
+      final String dotClass = ".class";
+      for (int idx = 0; idx < pluginInfo.initArgs.size(); ++idx) {
+        final String key = pluginInfo.initArgs.getName(idx);
+        final Object val = pluginInfo.initArgs.getVal(idx);
+        if (key.endsWith(dotClass)) {
+          final String cbName = key.substring(0, key.length() - dotClass.length());
+          final String cbClassName = (String)val;
+          namedCBs.put(cbName, solrResourceLoader.newInstance(cbClassName, CircuitBreaker.class));
+        }
+      }
+
+      for (String name : namedCBs.keySet()) {
+        final CircuitBreaker cb = namedCBs.get(name);
+        final String argPrefix = name + ".";
+
+        final HashMap<String,Object> params = new HashMap<>();
+
+        for (int idx = 0; idx < pluginInfo.initArgs.size(); ++idx) {
+          final String key = pluginInfo.initArgs.getName(idx);
+          final Object val = pluginInfo.initArgs.getVal(idx);
+          if (key.startsWith(argPrefix) && !key.endsWith(dotClass)) {
+            params.put(key.substring(argPrefix.length()), val);
+          }
+        }
+
+        SolrPluginUtils.invokeSetters(cb, params.entrySet());
+        circuitBreakerManager.register(cb);
+      }
+    }
+
+    /*
+    if (namedCBs.isEmpty()) {
+      circuitBreakerManager.init(pluginInfo);
+    }
+    */
 
     return circuitBreakerManager;
   }
