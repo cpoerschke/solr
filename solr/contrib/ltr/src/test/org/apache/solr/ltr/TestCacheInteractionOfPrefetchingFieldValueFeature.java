@@ -306,14 +306,15 @@ public class TestCacheInteractionOfPrefetchingFieldValueFeature extends TestLTRO
       super(name, params);
     }
 
-    public void setPrefetchFields(Set<String> fields) {
+    @Override
+    public void addPrefetchFields(Set<String> fields) {
       if(breakPrefetching.get()) {
         prefetchFields = Set.of(getField(), "id"); // only prefetch own field (and id needed for map-building below)
-        super.setPrefetchFields(Set.of(getField(), "id"));
+        super.addPrefetchFields(Set.of(getField(), "id"));
       } else {
         fields.add("id");
         prefetchFields = fields; // also prefetch all fields that all other PrefetchingFieldValueFeatures need
-        super.setPrefetchFields(fields);
+        super.addPrefetchFields(fields);
       }
     }
 

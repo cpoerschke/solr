@@ -172,7 +172,7 @@ public class ManagedFeatureStore extends ManagedResource implements ManagedResou
         prefetchFields.add(feature.getField());
       }
       for (PrefetchingFieldValueFeature feature : prefetchingFieldValueFeatures) {
-        feature.setPrefetchFields(prefetchFields);
+        feature.addPrefetchFields(prefetchFields);
       }
     }
   }

@@ -402,6 +402,12 @@ public class TestRerankBase extends RestTestBase {
 
   protected static void doTestParamsToMap(String featureClassName,
       LinkedHashMap<String,Object> featureParams) throws Exception {
+    doTestParamsToMap(featureClassName, featureParams, true /* expectEquals */);
+  }
+
+  protected static void doTestParamsToMap(String featureClassName,
+      LinkedHashMap<String,Object> featureParams,
+      boolean expectEquals) throws Exception {
 
     // start with default parameters
     final LinkedHashMap<String,Object> paramsA = new LinkedHashMap<String,Object>();
@@ -451,8 +457,12 @@ public class TestRerankBase extends RestTestBase {
     final Feature featureB = Feature.getInstance(solrResourceLoader,
         featureClassName, featureName, paramsB);
 
-    // check that feature A and feature B are identical
-    assertEquals(featureA, featureB);
+    // check if feature A and feature B are identical
+    if (expectEquals) {
+      assertEquals(featureA, featureB);
+    } else {
+      assertNotEquals(featureA, featureB);
+    }
   }
 
 }

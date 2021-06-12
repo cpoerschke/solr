@@ -16,7 +16,6 @@
  */
 package org.apache.solr.ltr.feature;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.solr.ltr.TestRerankBase;
@@ -27,8 +26,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,61 +45,62 @@ public class TestPrefetchingFieldValueFeature extends TestRerankBase {
 
   @Test
   public void testThatPrefetchingFieldValueFeatureCollectsAllStoredFieldsInFeatureStore() throws Exception {
-    ObservingPrefetchingFieldValueFeature.allPrefetchFields = null;
+    ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations.clear();
     final String fstore = "testThatPrefetchingFieldValueFeatureCollectsAllStoredFieldsInFeatureStore";
-    loadFeature("storedIntField", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
+    loadFeature("storedIntFieldFeature", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
         "{\"field\":\"storedIntField\"}");
 
-    assertEquals(Set.of("storedIntField"), ObservingPrefetchingFieldValueFeature.allPrefetchFields);
+    assertEquals(Set.of(
+        Set.of("storedIntField")), ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations);
 
-    ObservingPrefetchingFieldValueFeature.allPrefetchFields = null;
+    ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations.clear();
 
-    loadFeature("storedLongField", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
+    loadFeature("storedLongFieldFeature", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
         "{\"field\":\"storedLongField\"}");
-    loadFeature("storedFloatField", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
+
+    assertEquals(Set.of(
+        Set.of("storedIntField", "storedLongField")), ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations);
+
+    loadFeature("storedFloatFieldFeature", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
         "{\"field\":\"storedFloatField\"}");
 
-    assertTrue(ObservingPrefetchingFieldValueFeature.allPrefetchFields
-        .containsAll(List.of("storedIntField", "storedLongField", "storedFloatField")));
+    assertEquals(Set.of(
+        Set.of("storedIntField", "storedLongField"),
+        Set.of("storedIntField", "storedLongField", "storedFloatField")), ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations);
   }
 
   @Test
   public void testThatPrefetchingFieldValueFeatureCollectsAllStoredFieldsInItsOwnFeatureStore() throws Exception {
-    ObservingPrefetchingFieldValueFeature.allPrefetchFields = null;
+    ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations.clear();
     final String fstore = "testThatPrefetchingFieldValueFeatureCollectsAllStoredFieldsInItsOwnFeatureStore";
-    loadFeature("storedIntField", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
+    loadFeature("storedIntFieldFeature", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
         "{\"field\":\"storedIntField\"}");
 
-    assertEquals(Set.of("storedIntField"), ObservingPrefetchingFieldValueFeature.allPrefetchFields);
+    assertEquals(Set.of(Set.of("storedIntField")), ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations);
 
-    ObservingPrefetchingFieldValueFeature.allPrefetchFields = null;
+    ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations.clear();
 
-    loadFeature("storedLongField", ObservingPrefetchingFieldValueFeature.class.getName(), fstore + "-other",
+    loadFeature("storedLongFieldFeature", ObservingPrefetchingFieldValueFeature.class.getName(), fstore + "-other",
         "{\"field\":\"storedLongField\"}");
 
-    assertEquals(ObservingPrefetchingFieldValueFeature.allPrefetchFields.size(), 1);
-    assertTrue(ObservingPrefetchingFieldValueFeature.allPrefetchFields.contains("storedLongField"));
+    assertEquals(Set.of(Set.of("storedLongField")), ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations);
   }
 
   @Test
   public void testThatPrefetchFieldsAreOnlyUpdatedAfterLoadingAllFeatures() throws Exception {
-    ObservingPrefetchingFieldValueFeature.allPrefetchFields = null;
-    ObservingPrefetchingFieldValueFeature.updateCount = 0;
+    ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations.clear();
     final String fstore = "feature-store-for-test";
     loadFeature("storedIntField", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
         "{\"field\":\"storedIntField\"}");
 
-    assertEquals(Set.of("storedIntField"), ObservingPrefetchingFieldValueFeature.allPrefetchFields);
-    assertEquals(1, ObservingPrefetchingFieldValueFeature.updateCount);
+    assertEquals(Set.of(Set.of("storedIntField")), ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations);
 
-    ObservingPrefetchingFieldValueFeature.allPrefetchFields = null;
-    ObservingPrefetchingFieldValueFeature.updateCount = 0;
+    ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations.clear();
 
     loadFeatures("prefetching_features.json");
 
-    assertTrue(ObservingPrefetchingFieldValueFeature.allPrefetchFields
-        .containsAll(List.of("storedIntField", "storedLongField", "storedFloatField", "storedDoubleField")));
-    assertEquals(1, ObservingPrefetchingFieldValueFeature.updateCount);
+    assertEquals(Set.of(Set.of("storedIntField", "storedLongField", "storedFloatField", "storedDoubleField")),
+        ObservingPrefetchingFieldValueFeature.prefetchFieldsObservations);
   }
 
   @Test
@@ -107,39 +108,58 @@ public class TestPrefetchingFieldValueFeature extends TestRerankBase {
     final String fstore = "feature-store-for-test";
 
     // load initial features
-    loadFeature("storedIntField", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
+    loadFeature("storedIntFieldFeature", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
         "{\"field\":\"storedIntField\"}");
-    loadFeature("storedLongField", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
+    loadFeature("storedLongFieldFeature", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
         "{\"field\":\"storedLongField\"}");
 
     assertJQ(ManagedFeatureStore.REST_END_POINT,"/featureStores==['"+fstore+"']");
     assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
-        "/features/[0]/name=='storedIntField'");
+        "/features/[0]/name=='storedIntFieldFeature'");
     assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
-        "/features/[0]/params/prefetchFields==['storedIntField','storedLongField']");
+        "/features/[0]/params/field=='storedIntField'");
     assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
-        "/features/[1]/name=='storedLongField'");
+        "/features/[0]/params/prefetchFields==['storedLongField']");
     assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
-        "/features/[1]/params/prefetchFields==['storedIntField','storedLongField']");
+        "/features/[1]/name=='storedLongFieldFeature'");
+    assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
+        "/features/[1]/params/field=='storedLongField'");
+    assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
+        "/features/[1]/params/prefetchFields==['storedIntField']");
 
     // add another feature to test that new field is added to prefetchFields
-    loadFeature("storedDoubleField", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
+    loadFeature("storedDoubleFieldFeature", ObservingPrefetchingFieldValueFeature.class.getName(), fstore,
         "{\"field\":\"storedDoubleField\"}");
 
     assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
-        "/features/[0]/name=='storedIntField'");
+        "/features/[0]/name=='storedIntFieldFeature'");
     assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
-        "/features/[0]/params/prefetchFields==['storedIntField','storedDoubleField','storedLongField']");
+        "/features/[0]/params/field=='storedIntField'");
     assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
-        "/features/[1]/name=='storedLongField'");
+        "/features/[0]/params/prefetchFields==['storedDoubleField','storedLongField']");
+
     assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
-        "/features/[1]/params/prefetchFields==['storedIntField','storedDoubleField','storedLongField']");
+        "/features/[1]/name=='storedLongFieldFeature'");
+    assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
+        "/features/[1]/params/field=='storedLongField'");
+    assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
+        "/features/[1]/params/prefetchFields==['storedDoubleField','storedIntField']");
+
+    assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
+        "/features/[2]/name=='storedDoubleFieldFeature'");
+    assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
+        "/features/[2]/params/field=='storedDoubleField'");
+    assertJQ(ManagedFeatureStore.REST_END_POINT + "/"+fstore,
+        "/features/[2]/params/prefetchFields==['storedIntField','storedLongField']");
   }
 
   @Test
   public void testParamsToMapWithoutPrefetchFields() {
+    final String fieldName = "field"+random().nextInt(10);
+    final Set<String> fieldNameAsSet = Collections.singleton(fieldName);
+
     final LinkedHashMap<String,Object> params = new LinkedHashMap<>();
-    params.put("field", "field"+random().nextInt(10));
+    params.put("field", fieldName);
 
     // create a feature from the parameters
     final PrefetchingFieldValueFeature featureA = (PrefetchingFieldValueFeature) Feature.getInstance(solrResourceLoader,
@@ -153,19 +173,61 @@ public class TestPrefetchingFieldValueFeature extends TestRerankBase {
         PrefetchingFieldValueFeature.class.getName(), "featureName", paramsB);
 
     // do not call equals() because of mismatch between prefetchFields and params
-    // (featureA has null for prefetchFields-param, featureB has empty set)
+    // (featureA has no prefetchFields-param, featureB has empty prefetchFields-param)
     assertEquals(featureA.getName(), featureB.getName());
     assertEquals(featureA.getField(), featureB.getField());
-    assertTrue(CollectionUtils.isEmpty(featureA.getPrefetchFields()) // featureA has null
-        && CollectionUtils.isEmpty(featureB.getPrefetchFields())); // featureB has empty set
+
+    assertNull(featureA.getConfiguredPrefetchFields());
+    assertTrue(featureB.getConfiguredPrefetchFields().isEmpty());
+
+    assertTrue(featureA.getComputedPrefetchFields().isEmpty());
+    assertTrue(featureB.getComputedPrefetchFields().isEmpty());
+
+    assertEquals(fieldNameAsSet, featureA.getEffectivePrefetchFields());
+    assertEquals(fieldNameAsSet, featureB.getEffectivePrefetchFields());
+  }
+
+  @Test
+  public void testParamsToMapWithPrefetchFields() {
+    final String fieldName = "field"+random().nextInt(10);
+    final Set<String> fieldNameAsSet = Collections.singleton(fieldName);
+
+    final LinkedHashMap<String,Object> params = new LinkedHashMap<>();
+    params.put("field", fieldName);
+
+    // create a feature from the parameters
+    final PrefetchingFieldValueFeature feature = (PrefetchingFieldValueFeature) Feature.getInstance(solrResourceLoader,
+        PrefetchingFieldValueFeature.class.getName(), "featureName", params);
+
+    params.put("prefetchFields", Collections.EMPTY_SET);
+    // as yet no prefetch fields have been set (and fieldName is not included in prefetch fields)
+    assertEquals(params, feature.paramsToMap());
+
+    // update the feature with the joint prefetch fields of itself and (imaginary) fellow features
+    feature.addPrefetchFields(Set.of("foo", fieldName, "bar"));
+
+    params.put("prefetchFields", Set.of("foo", "bar"));
+    // fieldName is not included in prefetch fields
+    assertEquals(params, feature.paramsToMap());
   }
 
   @Test
   public void testCompleteParamsToMap() throws Exception {
-    final LinkedHashMap<String,Object> params = new LinkedHashMap<>();
-    params.put("field", "field"+random().nextInt(10));
-    params.put("prefetchFields", Set.of("field_1", "field_2"));
-    doTestParamsToMap(PrefetchingFieldValueFeature.class.getName(), params);
+    {
+      final LinkedHashMap<String,Object> params = new LinkedHashMap<>();
+      params.put("field", "field"+random().nextInt(10));
+      // absent prefetchFields becomes empty prefetchFields
+      doTestParamsToMap(PrefetchingFieldValueFeature.class.getName(), params, false /* expectEquals */);
+      params.put("prefetchFields", Collections.EMPTY_SET);
+      doTestParamsToMap(PrefetchingFieldValueFeature.class.getName(), params, true /* expectEquals */);
+    }
+    {
+      final LinkedHashMap<String,Object> params = new LinkedHashMap<>();
+      params.put("field", "field"+random().nextInt(10));
+      params.put("prefetchFields", Set.of("field_1", "field_2"));
+      // configured prefetchFields are ignored
+      doTestParamsToMap(PrefetchingFieldValueFeature.class.getName(), params, false /* expectEquals */);
+    }
   }
 
   /**
@@ -173,21 +235,17 @@ public class TestPrefetchingFieldValueFeature extends TestRerankBase {
    * that the logic to store them works as expected.
    */
   final public static class ObservingPrefetchingFieldValueFeature extends PrefetchingFieldValueFeature {
-    public static Set<String> allPrefetchFields;
-    public static int updateCount = 0;
+    public static Set<Set<String>> prefetchFieldsObservations = new HashSet<>();
 
     public ObservingPrefetchingFieldValueFeature(String name, Map<String, Object> params) {
       super(name, params);
     }
 
-    public void setPrefetchFields(Set<String> fields) {
-      super.setPrefetchFields(fields);
+    public void addPrefetchFields(Set<String> fields) {
+      super.addPrefetchFields(fields);
       // needed because all feature instances are updated. We just want to track updates with different fields, not all
       // updates of the instances
-      if (fields != allPrefetchFields) {
-        updateCount++;
-      }
-      allPrefetchFields = getPrefetchFields();
+      prefetchFieldsObservations.add(fields);
     }
 
     @Override

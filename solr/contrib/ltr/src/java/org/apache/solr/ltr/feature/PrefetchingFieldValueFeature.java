@@ -28,14 +28,14 @@ import org.apache.solr.search.SolrDocumentFetcher;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
- * This feature returns the value of a field in the current document.
- * The field must have stored="true" or docValues="true" properties.
+ * TODO: when to use PrefetchingFieldValueFeature instead of FieldValueFeature?
  * Example configuration:
  * <pre>{
   "name":  "rawHits",
@@ -44,33 +44,58 @@ import java.util.Set;
       "field": "hits"
   }
 }</pre>
+ * TODO: mention about prefetch fields being computed and shown when downloading
+ * the feature but them not being used or necessary when configuring/uploading
  */
 public class PrefetchingFieldValueFeature extends FieldValueFeature {
+
   // used to store all fields from all PrefetchingFieldValueFeatures
-  private Set<String> prefetchFields;
+  private SortedSet<String> effectivePrefetchFields = new TreeSet<>();
+  private SortedSet<String> computedPrefetchFields = new TreeSet<>();
+  private Collection<String> configuredPrefetchFields = null;
+
   // can be used for debugging to only fetch the field this features uses
   public static final String DISABLE_PREFETCHING_FIELD_VALUE_FEATURE = "disablePrefetchingFieldValueFeature";
 
-  public void setPrefetchFields(Set<String> fields) {
-    prefetchFields = fields;
+  @Override
+  public void setField(String field) {
+    super.setField(field);
+    effectivePrefetchFields.add(field);
   }
 
   // needed for loading from storage
   public void setPrefetchFields(Collection<String> fields) {
-    prefetchFields = Set.of(fields.toArray(new String[fields.size()]));
+    configuredPrefetchFields = fields;
+    // no effectivePrefetchFields update here, only computed fields are effective
+  }
+
+  public void addPrefetchFields(Set<String> fields) {
+    effectivePrefetchFields.addAll(fields);
+    computedPrefetchFields.addAll(fields);
+    computedPrefetchFields.remove(getField());
+  }
+
+  @VisibleForTesting
+  public Collection<String> getConfiguredPrefetchFields(){
+    return configuredPrefetchFields;
+  }
+
+  @VisibleForTesting
+  public Set<String> getComputedPrefetchFields(){
+    return computedPrefetchFields;
+  }
+
+  @VisibleForTesting
+  public Set<String> getEffectivePrefetchFields(){
+    return effectivePrefetchFields;
   }
 
   @Override
   public LinkedHashMap<String,Object> paramsToMap() {
     final LinkedHashMap<String,Object> params = defaultParamsToMap();
     params.put("field", getField());
-    params.put("prefetchFields", prefetchFields == null ? Collections.emptySet() : prefetchFields); // prevent NPE
+    params.put("prefetchFields", computedPrefetchFields);
     return params;
-  }
-
-  @VisibleForTesting
-  public Set<String> getPrefetchFields(){
-    return prefetchFields;
   }
 
   public PrefetchingFieldValueFeature(String name, Map<String,Object> params) {
@@ -108,6 +133,7 @@ public class PrefetchingFieldValueFeature extends FieldValueFeature {
      */
     @Override
     public FeatureScorer scorer(LeafReaderContext context) throws IOException {
+      // TODO: consider more if PrefetchingFieldValueFeature not extending FieldValueFeature might have advantages
       if (schemaField != null && !schemaField.stored() && schemaField.hasDocValues()) {
         return super.scorer(context);
       }
@@ -133,11 +159,11 @@ public class PrefetchingFieldValueFeature extends FieldValueFeature {
           if(disablePrefetching) {
             document = docFetcher.doc(context.docBase + itr.docID(), getFieldAsSet());
           } else {
-            document = docFetcher.doc(context.docBase + itr.docID(), prefetchFields);
+            document = docFetcher.doc(context.docBase + itr.docID(), effectivePrefetchFields);
           }
           return super.parseStoredFieldValue(document.getField(getField()));
         } catch (final IOException e) {
-          final String prefetchedFields = disablePrefetching ? getField() : StrUtils.join(prefetchFields, ',');
+          final String prefetchedFields = disablePrefetching ? getField() : StrUtils.join(effectivePrefetchFields, ',');
           throw new FeatureException(
               e.toString() + ": " +
                   "Unable to extract feature for " + name +
