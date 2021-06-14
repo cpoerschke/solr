@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.Explanation;
@@ -32,6 +33,7 @@ import org.apache.lucene.util.RamUsageEstimator;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.ltr.feature.Feature;
 import org.apache.solr.ltr.feature.FeatureException;
+import org.apache.solr.ltr.feature.PrefetchingFieldValueFeature;
 import org.apache.solr.ltr.norm.IdentityNormalizer;
 import org.apache.solr.ltr.norm.Normalizer;
 import org.apache.solr.util.SolrPluginUtils;
@@ -118,11 +120,39 @@ public abstract class LTRScoringModel implements Accountable {
       String featureStoreName, List<Feature> allFeatures,
       Map<String,Object> params) {
     this.name = name;
-    this.features = features != null ? Collections.unmodifiableList(new ArrayList<>(features)) : null;
+    this.features = copyAndConnectFeatures(features);
     this.featureStoreName = featureStoreName;
-    this.allFeatures = allFeatures != null ? Collections.unmodifiableList(new ArrayList<>(allFeatures)) : null;
+    this.allFeatures = copyAndConnectFeatures(allFeatures);
     this.params = params != null ? Collections.unmodifiableMap(new LinkedHashMap<>(params)) : null;
     this.norms = norms != null ? Collections.unmodifiableList(new ArrayList<>(norms)) : null;
+  }
+
+  private static List<Feature> copyAndConnectFeatures(final List<Feature> in) {
+    if (in == null) return null;
+
+    final List<Feature> out = new ArrayList<>(in.size());
+
+    final List<PrefetchingFieldValueFeature> pfvfList = new ArrayList<>();
+
+    for (Feature f : in) {
+      if (f instanceof PrefetchingFieldValueFeature) {
+        final PrefetchingFieldValueFeature pfvf = ((PrefetchingFieldValueFeature)f).clone();
+        pfvfList.add(pfvf);
+        out.add(pfvf);
+      } else {
+        out.add(f);
+      }
+    }
+
+    final Set<String> prefetchFields = new HashSet<>();
+    for (PrefetchingFieldValueFeature pfvf : pfvfList) {
+      prefetchFields.add(pfvf.getField());
+    }
+    for (PrefetchingFieldValueFeature pfvf : pfvfList) {
+      pfvf.setPrefetchFields(prefetchFields, true /* freeze */);
+    }
+
+    return Collections.unmodifiableList(out);
   }
 
   /**

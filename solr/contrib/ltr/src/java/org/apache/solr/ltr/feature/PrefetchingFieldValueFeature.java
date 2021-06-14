@@ -48,15 +48,29 @@ import java.util.Set;
 public class PrefetchingFieldValueFeature extends FieldValueFeature {
   // used to store all fields from all PrefetchingFieldValueFeatures
   private Set<String> prefetchFields;
+  // if frozen is true then prefetchFields may not be changed
+  private boolean frozen;
   // can be used for debugging to only fetch the field this features uses
   public static final String DISABLE_PREFETCHING_FIELD_VALUE_FEATURE = "disablePrefetchingFieldValueFeature";
 
+  // TODO: remove this method once tests call the alternative
   public void setPrefetchFields(Set<String> fields) {
+    setPrefetchFields(fields, false /* freeze */);
+  }
+
+  public void setPrefetchFields(Set<String> fields, boolean freeze) {
+    if (frozen) {
+     // TODO: throw exception
+    }
     prefetchFields = fields;
+    frozen = freeze;
   }
 
   // needed for loading from storage
   public void setPrefetchFields(Collection<String> fields) {
+    if (frozen) {
+      // TODO: throw exception
+    }
     prefetchFields = Set.of(fields.toArray(new String[fields.size()]));
   }
 
@@ -75,6 +89,10 @@ public class PrefetchingFieldValueFeature extends FieldValueFeature {
 
   public PrefetchingFieldValueFeature(String name, Map<String,Object> params) {
     super(name, params);
+  }
+
+  public PrefetchingFieldValueFeature clone() {
+    return new PrefetchingFieldValueFeature(this.name, this.paramsToMap());
   }
 
   @Override
