@@ -297,14 +297,14 @@ public class UpdateStream extends TupleStream implements Expressible {
   @SuppressWarnings({"unchecked"})
   private SolrInputDocument convertTupleToSolrDocument(Tuple tuple) {
     SolrInputDocument doc = new SolrInputDocument();
-    for (Object field : tuple.getFields().keySet()) {
+    for (String field : tuple.getFields().keySet()) {
 
       if (! (field.equals(CommonParams.VERSION_FIELD) && pruneVersionField)) {
         Object value = tuple.get(field);
         if (value instanceof List) {
-          addMultivaluedField(doc, (String)field, (List<Object>)value);
+          addMultivaluedField(doc, field, (List<Object>)value);
         } else {
-          doc.addField((String)field, tuple.get(field));
+          doc.addField(field, tuple.get(field));
         }
       }
     }
