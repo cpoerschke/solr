@@ -23,7 +23,6 @@ import static org.apache.solr.monitor.MonitorConstants.MONITOR_DOCUMENTS_KEY;
 import static org.apache.solr.monitor.MonitorConstants.MONITOR_OUTPUT_KEY;
 import static org.apache.solr.monitor.MonitorConstants.MONITOR_QUERIES_KEY;
 import static org.apache.solr.monitor.MonitorConstants.QUERY_MATCH_TYPE_KEY;
-import static org.apache.solr.monitor.MonitorConstants.REVERSE_SEARCH_PARAM_NAME;
 import static org.apache.solr.monitor.MonitorConstants.WRITE_TO_DOC_LIST_KEY;
 
 import java.io.IOException;
@@ -79,8 +78,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           MonitorFields.QUERY_ID + " desc",
           CommonParams.JSON,
           read("/monitor/multi-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           QUERY_MATCH_TYPE_KEY,
           "simple"
         };
@@ -110,8 +107,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/multi-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           WRITE_TO_DOC_LIST_KEY,
           supportsWriteToDocList(),
           QUERY_MATCH_TYPE_KEY,
@@ -154,8 +149,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           MonitorFields.QUERY_ID + "  desc",
           CommonParams.JSON,
           read("/monitor/multi-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           WRITE_TO_DOC_LIST_KEY,
           false,
           QUERY_MATCH_TYPE_KEY,
@@ -184,8 +177,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/multi-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           WRITE_TO_DOC_LIST_KEY,
           supportsWriteToDocList(),
           QUERY_MATCH_TYPE_KEY,
@@ -222,8 +213,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/single-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           WRITE_TO_DOC_LIST_KEY,
           supportsWriteToDocList(),
           QUERY_MATCH_TYPE_KEY,
@@ -256,8 +245,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/dangling-test-single-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           WRITE_TO_DOC_LIST_KEY,
           supportsWriteToDocList(),
           QUERY_MATCH_TYPE_KEY,
@@ -304,8 +291,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/single-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           WRITE_TO_DOC_LIST_KEY,
           supportsWriteToDocList(),
           QUERY_MATCH_TYPE_KEY,
@@ -335,8 +320,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/multi-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           WRITE_TO_DOC_LIST_KEY,
           supportsWriteToDocList(),
           QUERY_MATCH_TYPE_KEY,
@@ -368,8 +351,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/multi-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           WRITE_TO_DOC_LIST_KEY,
           supportsWriteToDocList()
         };
@@ -417,8 +398,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/multi-doc-batch-multi-valued.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           QUERY_MATCH_TYPE_KEY,
           "highlights",
           WRITE_TO_DOC_LIST_KEY,
@@ -478,8 +457,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/single-doc-batch-multi-valued.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           QUERY_MATCH_TYPE_KEY,
           "highlights",
           WRITE_TO_DOC_LIST_KEY,
@@ -529,8 +506,6 @@ public class MonitorSolrQueryTest extends BaseDistributedSearchTestCase {
           id + " desc",
           CommonParams.JSON,
           read("/monitor/dangling-test-single-doc-batch.json"),
-          REVERSE_SEARCH_PARAM_NAME,
-          true,
           WRITE_TO_DOC_LIST_KEY,
           supportsWriteToDocList(),
           QUERY_MATCH_TYPE_KEY,
