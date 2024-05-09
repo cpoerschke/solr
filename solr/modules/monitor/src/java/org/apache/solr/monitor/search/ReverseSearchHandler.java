@@ -28,8 +28,7 @@ public class ReverseSearchHandler extends SearchHandler {
 
   @Override
   protected List<String> getDefaultComponents() {
-    ArrayList<String> names = new ArrayList<>(2);
-    names.add(QueryComponent.COMPONENT_NAME);
+    ArrayList<String> names = new ArrayList<>(1);
     names.add(ReverseSearchComponent.COMPONENT_NAME);
     return names;
   }
