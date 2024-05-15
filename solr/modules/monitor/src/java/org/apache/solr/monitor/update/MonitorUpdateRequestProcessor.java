@@ -58,6 +58,7 @@ public class MonitorUpdateRequestProcessor extends UpdateRequestProcessor {
   private final SolrCore core;
   private final IndexSchema indexSchema;
   private final QueryDecomposer queryDecomposer;
+  private final String payloadFieldName;
   private final Presearcher presearcher;
   private final MonitorSchemaFields monitorSchemaFields;
 
@@ -65,13 +66,15 @@ public class MonitorUpdateRequestProcessor extends UpdateRequestProcessor {
       UpdateRequestProcessor next,
       SolrCore core,
       QueryDecomposer queryDecomposer,
+      String payloadFieldName,
       Presearcher presearcher) {
     super(next);
     this.core = core;
     this.indexSchema = core.getLatestSchema();
     this.queryDecomposer = queryDecomposer;
+    this.payloadFieldName = payloadFieldName;
     this.presearcher = presearcher;
-    this.monitorSchemaFields = new MonitorSchemaFields(indexSchema);
+    this.monitorSchemaFields = new MonitorSchemaFields(this.indexSchema, this.payloadFieldName);
   }
 
   @Override
@@ -82,7 +85,7 @@ public class MonitorUpdateRequestProcessor extends UpdateRequestProcessor {
     var queryFieldValue = solrInputDocument.getFieldValue(MonitorFields.MONITOR_QUERY);
     if (queryFieldValue != null) {
       var payload =
-          Optional.ofNullable(solrInputDocument.getFieldValue(MonitorFields.PAYLOAD))
+          Optional.ofNullable(solrInputDocument.getFieldValue(this.payloadFieldName))
               .map(Object::toString)
               .orElse(null);
       List<SolrInputDocument> children =
@@ -113,7 +116,8 @@ public class MonitorUpdateRequestProcessor extends UpdateRequestProcessor {
                 child ->
                     solrInputDocument.forEach(
                         field -> {
-                          if (!MonitorFields.RESERVED_MONITOR_FIELDS.contains(field.getName())) {
+                          if (!MonitorFields.RESERVED_MONITOR_FIELDS.contains(field.getName())
+                              && !this.payloadFieldName.equals(field.getName())) {
                             child.addField(field.getName(), field.getValue());
                           }
                         }));

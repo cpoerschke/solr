@@ -29,6 +29,8 @@ import org.apache.lucene.search.DocIdSetIterator;
 
 public class MonitorDataValues {
 
+  private final String payloadFieldName;
+
   private SortedDocValues queryIdIt;
   private SortedDocValues cacheIdIt;
   private SortedDocValues mqIt;
@@ -37,12 +39,16 @@ public class MonitorDataValues {
   private int currentDoc = DocIdSetIterator.NO_MORE_DOCS;
   private LeafReader reader;
 
+  public MonitorDataValues(String payloadFieldName) {
+    this.payloadFieldName = payloadFieldName;
+  }
+
   public void update(LeafReaderContext context) throws IOException {
     reader = context.reader();
     cacheIdIt = reader.getSortedDocValues(MonitorFields.CACHE_ID);
     queryIdIt = reader.getSortedDocValues(MonitorFields.QUERY_ID);
     mqIt = reader.getSortedDocValues(MonitorFields.MONITOR_QUERY);
-    payloadIt = reader.getSortedDocValues(MonitorFields.PAYLOAD);
+    payloadIt = reader.getSortedDocValues(this.payloadFieldName);
     versionIt = reader.getNumericDocValues(MonitorFields.VERSION);
     currentDoc = DocIdSetIterator.NO_MORE_DOCS;
   }
@@ -75,7 +81,7 @@ public class MonitorDataValues {
       }
       return null;
     }
-    return reader.document(currentDoc).get(MonitorFields.PAYLOAD);
+    return reader.document(currentDoc).get(this.payloadFieldName);
   }
 
   public long getVersion() throws IOException {

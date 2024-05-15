@@ -71,6 +71,10 @@ public class ReverseSearchComponent extends QueryComponent implements SolrCoreAw
   public static final String COMPONENT_NAME = "reverseSearch";
   private static final String MATCHER_THREAD_COUNT_KEY = "threadCount";
 
+  private static final String PAYLOAD_FIELD_NAME_KEY = "payloadFieldName";
+  private static final String PAYLOAD_FIELD_NAME_DEFAULT = "_mq_payload_";
+  private String payloadFieldName = PAYLOAD_FIELD_NAME_DEFAULT;
+
   private static final String SOLR_MONITOR_CACHE_NAME_KEY = "solrMonitorCacheName";
   private static final String SOLR_MONITOR_CACHE_NAME_DEFAULT = "solrMonitorCache";
   private String solrMonitorCacheName = SOLR_MONITOR_CACHE_NAME_DEFAULT;
@@ -84,6 +88,10 @@ public class ReverseSearchComponent extends QueryComponent implements SolrCoreAw
   @Override
   public void init(NamedList<?> args) {
     super.init(args);
+    Object payloadFieldName = args.remove(PAYLOAD_FIELD_NAME_KEY);
+    if (payloadFieldName != null) {
+      this.payloadFieldName = (String) payloadFieldName;
+    }
     Object solrMonitorCacheName = args.remove(SOLR_MONITOR_CACHE_NAME_KEY);
     if (solrMonitorCacheName != null) {
       this.solrMonitorCacheName = (String) solrMonitorCacheName;
@@ -239,6 +247,10 @@ public class ReverseSearchComponent extends QueryComponent implements SolrCoreAw
             MonitorFields.ANYTOKEN_FIELD + " field must be tokenized and multi-valued.");
       }
     }
+  }
+
+  public String getPayloadFieldName() {
+    return payloadFieldName;
   }
 
   public QueryDecomposer getQueryDecomposer() {

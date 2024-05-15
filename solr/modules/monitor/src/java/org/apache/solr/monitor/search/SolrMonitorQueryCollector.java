@@ -34,7 +34,7 @@ class SolrMonitorQueryCollector extends DelegatingCollector {
   private final MonitorQueryCache monitorQueryCache;
   private final SolrMonitorQueryDecoder queryDecoder;
   private final SolrMatcherSink matcherSink;
-  private final MonitorDataValues dataValues = new MonitorDataValues();
+  private final MonitorDataValues dataValues;
   private final boolean writeToDocList;
   private final QueryMatchType queryMatchType;
 
@@ -42,6 +42,7 @@ class SolrMonitorQueryCollector extends DelegatingCollector {
     this.monitorQueryCache = collectorContext.queryCache;
     this.queryDecoder = collectorContext.queryDecoder;
     this.matcherSink = collectorContext.solrMatcherSink;
+    this.dataValues = new MonitorDataValues(this.queryDecoder.payloadFieldName);
     this.writeToDocList = collectorContext.writeToDocList;
     this.queryMatchType = collectorContext.queryMatchType;
   }

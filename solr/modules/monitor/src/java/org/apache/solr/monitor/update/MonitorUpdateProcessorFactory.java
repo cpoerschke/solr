@@ -33,12 +33,14 @@ public class MonitorUpdateProcessorFactory extends UpdateRequestProcessorFactory
     implements SolrCoreAware {
 
   private QueryDecomposer queryDecomposer;
+  private String payloadFieldName;
   private Presearcher presearcher;
 
   @Override
   public UpdateRequestProcessor getInstance(
       SolrQueryRequest req, SolrQueryResponse rsp, UpdateRequestProcessor next) {
-    return new MonitorUpdateRequestProcessor(next, req.getCore(), queryDecomposer, presearcher);
+    return new MonitorUpdateRequestProcessor(
+        next, req.getCore(), queryDecomposer, payloadFieldName, presearcher);
   }
 
   @Override
@@ -48,5 +50,6 @@ public class MonitorUpdateProcessorFactory extends UpdateRequestProcessorFactory
             core.getSearchComponents().get(ReverseSearchComponent.COMPONENT_NAME);
     presearcher = rsc.getPresearcher();
     queryDecomposer = rsc.getQueryDecomposer();
+    payloadFieldName = rsc.getPayloadFieldName();
   }
 }

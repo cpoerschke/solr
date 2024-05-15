@@ -30,11 +30,11 @@ public class MonitorSchemaFields {
   private final SchemaField monitorQuery;
   private final SchemaField payload;
 
-  public MonitorSchemaFields(IndexSchema indexSchema) {
+  public MonitorSchemaFields(IndexSchema indexSchema, String payloadFieldName) {
     this.cacheId = indexSchema.getField(MonitorFields.CACHE_ID);
     this.queryId = indexSchema.getField(MonitorFields.QUERY_ID);
     this.monitorQuery = indexSchema.getField(MonitorFields.MONITOR_QUERY);
-    this.payload = indexSchema.getField(MonitorFields.PAYLOAD);
+    this.payload = indexSchema.getField(payloadFieldName);
   }
 
   public SchemaField getCacheId() {

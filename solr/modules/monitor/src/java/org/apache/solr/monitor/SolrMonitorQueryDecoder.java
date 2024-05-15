@@ -21,7 +21,6 @@ package org.apache.solr.monitor;
 
 import java.io.IOException;
 import java.util.Map;
-import org.apache.lucene.monitor.MonitorFields;
 import org.apache.lucene.monitor.MonitorQuery;
 import org.apache.lucene.monitor.QCEVisitor;
 import org.apache.lucene.monitor.QueryDecomposer;
@@ -32,6 +31,7 @@ public class SolrMonitorQueryDecoder {
 
   private final SolrCore core;
   private final QueryDecomposer queryDecomposer;
+  public final String payloadFieldName; // TODO: make this non-public
 
   public SolrMonitorQueryDecoder(SolrCore core) {
     this.core = core;
@@ -39,6 +39,7 @@ public class SolrMonitorQueryDecoder {
         (ReverseSearchComponent)
             core.getSearchComponents().get(ReverseSearchComponent.COMPONENT_NAME);
     this.queryDecomposer = rsc.getQueryDecomposer();
+    this.payloadFieldName = rsc.getPayloadFieldName();
   }
 
   private MonitorQuery decode(MonitorDataValues monitorDataValues) throws IOException {
@@ -49,7 +50,7 @@ public class SolrMonitorQueryDecoder {
     if (payload == null) {
       return new MonitorQuery(id, query, queryStr, Map.of());
     }
-    return new MonitorQuery(id, query, queryStr, Map.of(MonitorFields.PAYLOAD, payload));
+    return new MonitorQuery(id, query, queryStr, Map.of(this.payloadFieldName, payload));
   }
 
   public QCEVisitor getComponent(MonitorDataValues dataValues, String cacheId) throws IOException {
